@@ -4,7 +4,6 @@ Tic Tac Toe Player
 
 import math
 import copy
-from functools import lru_cache
 
 X = "X"
 O = "O"
@@ -24,7 +23,8 @@ def player(board):
     """
     Returns player who has the next turn on a board.
     """
-    return X if sum(1 if col == X else (-1 if col == O else 0) for row in board for col in row) == 0 else O
+    # return X if sum(1 if col == X else (-1 if col == O else 0) for row in board for col in row) == 0 else O
+    return X if sum(1 if board[i][j] == EMPTY else 0 for i in range(3) for j in range(3)) % 2 == 1 else O
 
 
 def actions(board):
@@ -83,36 +83,39 @@ def minimax(board):
     if terminal(board):
         return None
     if player(board) == X:
+        return max(actions(board), key=lambda action: min_value(result(board, action)))
         return max_value(board)[1]
     else:
+        return min(actions(board), key=lambda action: max_value(result(board, action)))
         return min_value(board)[1]
 
-def max_value(board):
+def max_value(board, alpha = float("-inf"), beta = float("inf")):
     """
     Calculates the optmial move for the maximizer
     """
     if terminal(board):
-        return utility(board), None
-    best_action = None
+        return utility(board)
     v = float("-inf")
     for action in actions(board):
-        value = min_value(result(board, action))[0]
-        if value > v:
-            v = value
-            best_action = action
-    return v, best_action
+        value = min_value(result(board, action), alpha, beta)
+        v = max(v, value)
+        alpha = max(alpha, v)
+        if beta <= alpha:
+            break
+    return v
 
-def min_value(board):
+def min_value(board, alpha = float("-inf"), beta = float("inf")):
     """
     Calculates the optmial move for the minimizer
     """
     if terminal(board):
-        return utility(board), None
-    best_action = None
+        return utility(board)
     v = float("inf")
     for action in actions(board):
-        value = max_value(result(board, action))[0]
-        if value < v:
-            v = value
-            best_action = action
-    return v, best_action
+        value = max_value(result(board, action), alpha, beta)
+        v = min(v, value)
+        beta = min(beta, v)
+        if beta <= alpha:
+            break
+        
+    return v
