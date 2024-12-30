@@ -161,11 +161,11 @@ def joint_probability(people, one_gene, two_genes, have_trait):
           case 0:
             probability *= (1 - p_mother) * (1 - p_father)
           case 1:
-            probability *= (p_mother * (1- p_father) + p_father * (1 - p_mother))
+            probability *= (p_mother * (1 - p_father) + p_father * (1 - p_mother))
           case 2:
             probability *= p_mother * p_father
       
-      probability *= trait_prob
+        probability *= trait_prob
           
     return probability
     
