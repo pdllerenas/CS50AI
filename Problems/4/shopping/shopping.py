@@ -1,10 +1,26 @@
 import csv
 import sys
+import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
 TEST_SIZE = 0.4
+
+MONTHS = {
+        "Jan": 0,
+        "Feb": 1,
+        "Mar": 2,
+        "Apr": 3,
+        "May": 4,
+        "June": 5,
+        "Jul": 6,
+        "Aug": 7,
+        "Sep": 8,
+        "Oct": 9,
+        "Nov": 10,
+        "Dec": 11
+    }
 
 
 def main():
@@ -59,15 +75,39 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
-
+    evidence = []
+    labels = []
+    with open(filename) as file:
+      r = csv.reader(file)
+      next(r)
+      for row in r:
+        labels.append(1 if row.pop() == "TRUE" else 0)
+        evidence.append(convert_type(row))
+    return evidence, labels
+        
+def convert_type(row):
+    for column, entry in enumerate(row):
+      match column:
+        case 0 | 2 | 4 | 11 | 12 | 13 | 14 :
+          row[column] = int(entry)
+        case 10:
+          row[column] = MONTHS.get(entry)
+        case 15:
+          row[column] = 1 if entry == "Returning_Visitor" else 0
+        case 16:
+          row[column] = 1 if entry == "TRUE" else 0
+        case _:
+          row[column] = float(entry)
+    return row
 
 def train_model(evidence, labels):
     """
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    model = KNeighborsClassifier(n_neighbors=1)
+    model.fit(evidence, labels)
+    return model
 
 
 def evaluate(labels, predictions):
@@ -85,8 +125,12 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
-
+    expected_positives = labels.count(1)
+    expected_negatives = labels.count(0)
+    expected = np.array(labels)
+    false_positive = (expected - predictions == -1).sum()
+    false_negative = (expected - predictions == 1).sum()
+    return (1 - false_negative / expected_positives, 1 - false_positive / expected_negatives)
 
 if __name__ == "__main__":
     main()
